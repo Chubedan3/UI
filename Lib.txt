@@ -1,6 +1,5 @@
 local Library = {}
 
--- Tween function (hiệu ứng mượt)
 local function Tween(obj, properties, duration)
     game:GetService("TweenService"):Create(
         obj,
@@ -9,13 +8,12 @@ local function Tween(obj, properties, duration)
     ):Play()
 end
 
--- Tạo GUI chính
 function Library:CreateWindow(title)
     local ScreenGui = Instance.new("ScreenGui")
     local MainFrame = Instance.new("Frame")
     local TitleLabel = Instance.new("TextLabel")
     local UIListLayout = Instance.new("UIListLayout")
-    local ToggleButton = Instance.new("ImageButton") -- Nút bật/tắt UI
+    local ToggleButton = Instance.new("ImageButton") 
 
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
     ScreenGui.Name = "CustomUILib"
@@ -26,7 +24,6 @@ function Library:CreateWindow(title)
     MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
     MainFrame.BorderSizePixel = 0
 
-    -- Tiêu đề UI
     TitleLabel.Parent = MainFrame
     TitleLabel.Size = UDim2.new(1, 0, 0, 40)
     TitleLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -40,7 +37,6 @@ function Library:CreateWindow(title)
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Padding = UDim.new(0, 5)
 
-    -- Nút bật/tắt UI
     ToggleButton.Parent = ScreenGui
     ToggleButton.Size = UDim2.new(0, 50, 0, 50)
     ToggleButton.Position = UDim2.new(0, 10, 0, 10)
@@ -53,12 +49,34 @@ function Library:CreateWindow(title)
         Tween(MainFrame, { Position = UDim2.new(0.5, -150, 0.5, isVisible and -200 or -800) }, 0.5)
     end)
 
-    local self = { MainFrame = MainFrame }
+    local self = { MainFrame = MainFrame, Tabs = {} }
     setmetatable(self, { __index = Library })
     return self
 end
 
--- Tạo Button với hiệu ứng
+function Library:AddTab(tabName)
+    local Tab = Instance.new("Frame")
+    Tab.Parent = self.MainFrame
+    Tab.Size = UDim2.new(1, 0, 0, 0)
+    Tab.BackgroundTransparency = 1
+
+    local TabLabel = Instance.new("TextLabel")
+    TabLabel.Parent = Tab
+    TabLabel.Size = UDim2.new(1, 0, 0, 30)
+    TabLabel.Text = tabName
+    TabLabel.TextSize = 16
+    TabLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TabLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+    local TabLayout = Instance.new("UIListLayout")
+    TabLayout.Parent = Tab
+    TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    TabLayout.Padding = UDim.new(0, 5)
+
+    table.insert(self.Tabs, Tab)
+    return Tab
+end
+
 function Library:AddButton(tab, text, callback)
     local Button = Instance.new("TextButton")
     Button.Parent = tab
@@ -76,7 +94,6 @@ function Library:AddButton(tab, text, callback)
     end)
 end
 
--- Tạo Toggle với hiệu ứng
 function Library:AddToggle(tab, text, callback)
     local Toggle = Instance.new("TextButton")
     Toggle.Parent = tab
@@ -93,51 +110,6 @@ function Library:AddToggle(tab, text, callback)
         Tween(Toggle, { BackgroundColor3 = state and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(60, 60, 60) }, 0.2)
         Toggle.Text = text .. (state and " [ON]" or " [OFF]")
         callback(state)
-    end)
-end
-
--- Tạo Slider với hiệu ứng
-function Library:AddSlider(tab, text, min, max, callback)
-    local SliderFrame = Instance.new("Frame")
-    SliderFrame.Parent = tab
-    SliderFrame.Size = UDim2.new(0, 280, 0, 40)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-
-    local SliderLabel = Instance.new("TextLabel")
-    SliderLabel.Parent = SliderFrame
-    SliderLabel.Size = UDim2.new(1, 0, 0.5, 0)
-    SliderLabel.Text = text .. ": " .. min
-    SliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    SliderLabel.BackgroundTransparency = 1
-
-    local Slider = Instance.new("Frame")
-    Slider.Parent = SliderFrame
-    Slider.Size = UDim2.new(0, 0, 0, 10)
-    Slider.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-    Slider.BorderSizePixel = 0
-
-    local dragging = false
-
-    SliderFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
-    end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local relative = math.clamp((input.Position.X - SliderFrame.AbsolutePosition.X) / 280, 0, 1)
-            local value = math.floor(min + (max - min) * relative)
-            Tween(Slider, { Size = UDim2.new(relative, 0, 0, 10) }, 0.1)
-            SliderLabel.Text = text .. ": " .. value
-            callback(value)
-        end
-    end)
-
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
     end)
 end
 
